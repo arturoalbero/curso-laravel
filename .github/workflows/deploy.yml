@@ -27,7 +27,7 @@ jobs:
 
       # 3. Subir los archivos públicos a /htdocs/
       - name: Upload public files to htdocs/
-        uses: SamKirkland/FTP-Deploy-Action@4.1.0
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
