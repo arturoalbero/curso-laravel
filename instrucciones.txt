@@ -1,0 +1,7 @@
+Para entrar a bash y poder usar el artisan
+
+docker exec -it nombre_contenedor_php bash 
+
+Concretamente, en mi caso:
+
+docker exec -it cursolaravel-php-1 bash 

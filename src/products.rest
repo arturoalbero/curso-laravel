@@ -1,0 +1,38 @@
+###
+GET http://localhost:8080/api/products
+Accept: application/json
+
+###
+GET http://localhost:8080/api/products/1
+Accept: application/json
+
+###
+POST http://localhost:8080/api/products HTTP/1.1
+Accept: application/json
+content-type: application/json
+
+{
+    
+    "name": "Producto API REST",
+    "description": "Descripción del producto nuevo",
+    "price": "123.45",
+    "stock": "2"
+}
+
+###
+PUT http://localhost:8080/api/products/5 HTTP/1.1
+Accept: application/json
+content-type: application/json
+
+{
+    "id": 5,
+    "name": "Producto Modificada",
+    "description": "Descripción de la nota modificada",
+    "price": "666.66",
+    "stock": 6
+}
+
+###
+DELETE http://localhost:8080/api/products/9
+Accept: application/json
+
