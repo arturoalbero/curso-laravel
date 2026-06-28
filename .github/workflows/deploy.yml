@@ -47,7 +47,7 @@ jobs:
 
       # 5. Subir el resto del proyecto Laravel a /htdocs/src/
       - name: Upload src (except public) to htdocs/src/
-        uses: SamKirkland/FTP-Deploy-Action@4.1.0
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
