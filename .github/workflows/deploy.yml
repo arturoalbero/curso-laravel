@@ -10,11 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout del código
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Instalar PHP y Composer (solo para generar vendor la primera vez)
       - name: Set up PHP with composer
         uses: shivammathur/setup-php@v2
         with:
@@ -26,7 +24,7 @@ jobs:
         working-directory: ./src
         run: composer install --no-dev --optimize-autoloader
 
-      # 3. Subir los archivos públicos a /htdocs/
+      # 3. Subir archivos públicos
       - name: Upload public files to htdocs/
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -34,67 +32,62 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./src/public/
-          server-dir: /htdocs/
-          dangerous-clean-slate: false   # mantiene el archivo de estado
-          log-level: minimal
+          server-dir: htdocs/                        # ✅ Sin "/" inicial
+          dangerous-clean-slate: false
+          state-name: .ftp-state-public.json         # ✅ Archivo de estado separado
+          log-level: verbose                         # ✅ Ver qué sube y qué no
 
-      # 4. Preparar el código fuente sin la carpeta "public"
+      # 4. Preparar src sin public
       - name: Prepare src without public
-        run: |
-          mkdir temp_src
-          shopt -s extglob
-          cp -r src/!(public) temp_src/
-        shell: bash
+        run: rsync -av --exclude='public' src/ temp_src/   # ✅ Más fiable que extglob
 
-      # 5. Subir el resto del proyecto Laravel a /htdocs/src/
-      - name: Upload src (except public) to htdocs/src/
+      # 5. Crear .env dentro de temp_src antes de subirlo
+      - name: Create .env file
+        run: |
+          cat > temp_src/.env << 'ENVEOF'
+          APP_NAME=Laravel
+          APP_ENV=production
+          APP_KEY=${{ secrets.APP_KEY }}
+          APP_DEBUG=false
+          APP_URL=${{ secrets.APP_URL }}
+
+          LOG_CHANNEL=stack
+          LOG_LEVEL=error
+
+          DB_CONNECTION=mysql
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=3306
+          DB_DATABASE=${{ secrets.DB_DATABASE }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+          SESSION_DRIVER=file
+          SESSION_LIFETIME=120
+          SESSION_ENCRYPT=false
+
+          BROADCAST_CONNECTION=log
+          FILESYSTEM_DISK=local
+          QUEUE_CONNECTION=sync
+          CACHE_STORE=file
+
+          MAIL_MAILER=log
+          MAIL_FROM_ADDRESS="hello@example.com"
+          MAIL_FROM_NAME="${APP_NAME}"
+          ENVEOF
+
+      # 6. Subir src (con .env incluido) a htdocs/src/
+      - name: Upload src to htdocs/src/
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./temp_src/
-          server-dir: /htdocs/src/
-          dangerous-clean-slate: false   # evita borrar y mantiene sync incremental
-          log-level: minimal
-
-      # 6. Crear el archivo .env
-      - name: Create .env file in temp folder
-        run: |
-          mkdir temp_env
-          echo "APP_NAME=Laravel" > temp_env/.env
-          echo "APP_ENV=production" >> temp_env/.env
-          echo "APP_KEY=${{ secrets.APP_KEY }}" >> temp_env/.env
-          echo "APP_DEBUG=false" >> temp_env/.env
-          echo "APP_URL=${{ secrets.APP_URL }}" >> temp_env/.env
-          echo "" >> temp_env/.env
-          echo "LOG_CHANNEL=stack" >> temp_env/.env
-          echo "" >> temp_env/.env
-          echo "DB_CONNECTION=${{ secrets.DB_CONNECTION }}" >> temp_env/.env
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> temp_env/.env
-          echo "DB_PORT=${{ secrets.DB_PORT }}" >> temp_env/.env
-          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> temp_env/.env
-          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> temp_env/.env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> temp_env/.env
-          echo "" >> temp_env/.env
-          echo "BROADCAST_DRIVER=log" >> temp_env/.env
-          echo "CACHE_DRIVER=file" >> temp_env/.env
-          echo "FILESYSTEM_DISK=local" >> temp_env/.env
-          echo "QUEUE_CONNECTION=sync" >> temp_env/.env
-          echo "SESSION_DRIVER=file" >> temp_env/.env
-          echo "SESSION_LIFETIME=120" >> temp_env/.env
-          echo "" >> temp_env/.env
-          echo "MAIL_MAILER=smtp" >> temp_env/.env
-          echo "MAIL_HOST=smtp.mailtrap.io" >> temp_env/.env
-          echo "MAIL_PORT=2525" >> temp_env/.env
-          echo "MAIL_USERNAME=null" >> temp_env/.env
-          echo "MAIL_PASSWORD=null" >> temp_env/.env
-          echo "MAIL_ENCRYPTION=null" >> temp_env/.env
-          echo "MAIL_FROM_ADDRESS=null" >> temp_env/.env
-          echo "MAIL_FROM_NAME=\"\${APP_NAME}\"" >> temp_env/.env
-
-      # 7. Subir el .env sin tocar el resto
-      - name: Upload .env via FTP manually
-        run: |
-          curl -T ./temp_env/.env ftp://${{ secrets.FTP_SERVER }}/htdocs/src/.env \
-            --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD}}"
+          server-dir: htdocs/src/                    # ✅ Sin "/" inicial
+          dangerous-clean-slate: false
+          state-name: .ftp-state-src.json            # ✅ Archivo de estado separado
+          exclude: |
+            **/.git*
+            **/tests/**
+            **/node_modules/**
+          log-level: verbose                         # ✅ Ver qué sube y qué no
