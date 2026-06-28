@@ -1,0 +1,61 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+}
+h1 {
+    color: darkblue;
+}
+h2 {
+    color: #333;
+}
+p {
+    color: #666;
+}
+.card {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin: 10px;
+    display: inline-block;
+    width: 200px;
+}
+
+.box{
+    background-color: #333;
+    color: #ccc;
+    margin: 1rem;
+    border-radius: 10px;
+    border-color: orange;
+    border-style: double;
+    border-width: 10px;
+    width: 50%;
+    
+}
+.box p{
+    margin: 1rem;
+    color: #f4f4f4;
+}
+.graysito{
+    margin: 1rem;
+    color: #ebebe4;
+    background-color: white;
+}
+.data{
+    color: orange;
+    font-weight: bold;
+}
+
+.s{
+    color: #ccc;
+    font-size: smaller;
+}
+
+nav ul {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+}
+
+nav a {
+    text-decoration: none;
+    font-weight: bold;
+}
